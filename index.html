@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Reloj David ⏰</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap');
+
+  :root {
+    --p1: #FF6B6B; --p1l: #FFE0E0; --p1d: #C0392B;
+    --p2: #4ECDC4; --p2l: #D0F5F3; --p2d: #1A9E95;
+    --bg: #FFF9F0;
+    --card: #FFFFFF;
+    --text: #2C2C2A;
+    --muted: #888;
+    --gold: #F5A623;
+    --purple: #9B59B6;
+    --green: #2ECC71;
+    --radius: 20px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: var(--bg);
+    min-height: 100vh;
+    color: var(--text);
+    overflow-x: hidden;
+  }
+
+  .screen { display: none; flex-direction: column; align-items: center; padding: 20px 16px; min-height: 100vh; }
+  .screen.active { display: flex; }
+
+  /* ===== PANTALLA INICIO ===== */
+  #s-inicio {
+    background: linear-gradient(160deg, #FF6B6B 0%, #FFD93D 40%, #4ECDC4 100%);
+    justify-content: center; gap: 24px;
+  }
+
+  .logo-wrap { text-align: center; }
+  .logo-brand {
+    font-family: 'Fredoka One', cursive;
+    font-size: 52px;
+    color: white;
+    text-shadow: 3px 3px 0 rgba(0,0,0,0.15);
+    letter-spacing: 2px;
+  }
+  .logo-sub { font-size: 16px; color: rgba(255,255,255,0.9); font-weight: 700; letter-spacing: 1px; margin-top: -6px; }
+
+  .clock-logo { margin: 0 auto; display: block; }
+
+  .card-inicio {
+    background: white;
+    border-radius: var(--radius);
+    padding: 24px 20px;
+    width: 100%; max-width: 360px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+  }
+  .card-inicio h2 { font-size: 18px; font-weight: 800; margin-bottom: 16px; color: var(--text); text-align: center; }
+
+  .players-row { display: flex; gap: 12px; justify-content: center; margin-bottom: 16px; }
+  .player-btn {
+    flex: 1; padding: 16px 8px; border: 3px solid #eee; border-radius: 16px;
+    background: white; cursor: pointer; text-align: center; transition: all 0.2s;
+    font-family: 'Fredoka One', cursive; font-size: 22px; color: var(--muted);
+  }
+  .player-btn .pb-label { font-family: 'Nunito', sans-serif; font-size: 13px; font-weight: 700; display: block; margin-top: 4px; }
+  .player-btn.selected { border-color: var(--purple); color: var(--purple); background: #F3E8FF; }
+
+  .input-group { margin-bottom: 12px; }
+  .input-group label { display: block; font-size: 13px; font-weight: 700; color: var(--muted); margin-bottom: 6px; }
+  .input-group input {
+    width: 100%; padding: 10px 14px; border: 2px solid #eee; border-radius: 12px;
+    font-family: 'Nunito', sans-serif; font-size: 16px; font-weight: 700;
+    background: #FAFAFA; color: var(--text); outline: none; transition: border 0.2s;
+  }
+  .input-group input:focus { border-color: var(--purple); }
+
+  .btn-start {
+    width: 100%; padding: 16px; border: none; border-radius: 16px;
+    background: linear-gradient(135deg, var(--purple) 0%, #FF6B6B 100%);
+    color: white; font-family: 'Fredoka One', cursive; font-size: 22px;
+    cursor: pointer; box-shadow: 0 4px 15px rgba(155,89,182,0.4);
+    transition: transform 0.15s; margin-top: 4px;
+  }
+  .btn-start:active { transform: scale(0.97); }
+
+  /* ===== PANTALLA JUEGO ===== */
+  #s-juego { background: var(--bg); padding: 0; }
+
+  .game-header {
+    width: 100%; padding: 14px 16px 12px;
+    display: flex; align-items: center; justify-content: space-between;
+    background: white; border-bottom: 3px solid #F0EDE8;
+  }
+
+  .turn-badge {
+    font-family: 'Fredoka One', cursive; font-size: 15px;
+    padding: 6px 14px; border-radius: 20px; color: white;
+  }
+  .turn-badge.p1 { background: var(--p1); }
+  .turn-badge.p2 { background: var(--p2); }
+
+  .scores-row { display: flex; gap: 8px; }
+  .score-chip {
+    font-size: 13px; font-weight: 800; padding: 4px 10px;
+    border-radius: 12px; display: flex; align-items: center; gap: 4px;
+  }
+  .score-chip.p1 { background: var(--p1l); color: var(--p1d); }
+  .score-chip.p2 { background: var(--p2l); color: var(--p2d); }
+
+  .round-info { font-size: 12px; color: var(--muted); font-weight: 700; text-align: center; }
+
+  .game-body { flex: 1; width: 100%; display: flex; flex-direction: column; align-items: center; padding: 16px; gap: 16px; }
+
+  .clock-area {
+    background: white; border-radius: var(--radius);
+    padding: 20px; width: 100%; max-width: 360px;
+    display: flex; flex-direction: column; align-items: center; gap: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  }
+  .clock-type-label {
+    font-size: 12px; font-weight: 800; letter-spacing: 1.5px; color: var(--muted); text-transform: uppercase;
+  }
+
+  /* ===== RELOJ ANALÓGICO ===== */
+  .analog-clock {
+    position: relative; width: 220px; height: 220px;
+  }
+
+  /* ===== RELOJ DIGITAL ===== */
+  .digital-display {
+    background: #1a1a2e; border-radius: 20px; padding: 24px 36px;
+    display: flex; align-items: center; justify-content: center;
+    border: 4px solid #333;
+    box-shadow: inset 0 2px 10px rgba(0,0,0,0.5);
+  }
+  .digital-time {
+    font-family: 'Fredoka One', cursive; font-size: 64px;
+    color: #00FF88; text-shadow: 0 0 10px rgba(0,255,136,0.5);
+    letter-spacing: 4px;
+  }
+  .digital-colon { animation: blink 1s step-end infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+  /* ===== OPCIONES DE RESPUESTA ===== */
+  .options-area { width: 100%; max-width: 360px; display: flex; flex-direction: column; gap: 10px; }
+
+  .option-btn {
+    width: 100%; padding: 14px 16px; border: 3px solid #eee;
+    border-radius: 16px; background: white; cursor: pointer;
+    font-family: 'Nunito', sans-serif; font-size: 16px; font-weight: 700;
+    color: var(--text); text-align: left; transition: all 0.15s;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .option-btn .opt-icon { font-size: 22px; }
+  .option-btn:hover { border-color: var(--purple); background: #F9F5FF; }
+  .option-btn.correct { border-color: var(--green); background: #E8FAF0; color: #1A7A45; animation: pop 0.3s ease; }
+  .option-btn.wrong { border-color: var(--p1); background: #FFF0F0; color: var(--p1d); animation: shake 0.3s ease; }
+  .option-btn:disabled { cursor: default; }
+
+  @keyframes pop { 0%{transform:scale(1)} 50%{transform:scale(1.04)} 100%{transform:scale(1)} }
+  @keyframes shake { 0%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} 100%{transform:translateX(0)} }
+
+  /* ===== FEEDBACK ===== */
+  .feedback-overlay {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    display: flex; align-items: center; justify-content: center;
+    z-index: 100; pointer-events: none; opacity: 0; transition: opacity 0.2s;
+  }
+  .feedback-overlay.show { opacity: 1; pointer-events: auto; }
+
+  .feedback-box {
+    background: white; border-radius: 24px; padding: 32px 28px;
+    text-align: center; box-shadow: 0 12px 40px rgba(0,0,0,0.2);
+    max-width: 300px; width: 90%;
+    transform: scale(0.8); transition: transform 0.25s;
+  }
+  .feedback-overlay.show .feedback-box { transform: scale(1); }
+  .feedback-emoji { font-size: 64px; margin-bottom: 8px; }
+  .feedback-title { font-family: 'Fredoka One', cursive; font-size: 26px; margin-bottom: 6px; }
+  .feedback-msg { font-size: 14px; color: var(--muted); font-weight: 600; margin-bottom: 20px; }
+  .feedback-next {
+    padding: 12px 28px; border: none; border-radius: 14px; cursor: pointer;
+    font-family: 'Fredoka One', cursive; font-size: 18px; color: white;
+  }
+  .feedback-next.ok { background: var(--green); }
+  .feedback-next.fail { background: var(--p1); }
+
+  /* ===== TURNO HANDOFF ===== */
+  .handoff-overlay {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    display: flex; align-items: center; justify-content: center;
+    z-index: 200; opacity: 0; pointer-events: none; transition: opacity 0.2s;
+  }
+  .handoff-overlay.show { opacity: 1; pointer-events: auto; }
+  .handoff-overlay.p1bg { background: rgba(255,107,107,0.92); }
+  .handoff-overlay.p2bg { background: rgba(78,205,196,0.92); }
+
+  .handoff-box { text-align: center; color: white; }
+  .handoff-box h2 { font-family: 'Fredoka One', cursive; font-size: 36px; margin-bottom: 8px; }
+  .handoff-box p { font-size: 18px; font-weight: 700; margin-bottom: 28px; opacity: 0.9; }
+  .handoff-tap {
+    padding: 14px 36px; border: 3px solid white; border-radius: 18px; background: rgba(255,255,255,0.2);
+    color: white; font-family: 'Fredoka One', cursive; font-size: 20px; cursor: pointer;
+  }
+
+  /* ===== BOTÓN FINALIZAR ===== */
+  .btn-end {
+    padding: 10px 20px; border: 2px solid #ddd; border-radius: 14px; background: white;
+    font-family: 'Nunito', sans-serif; font-size: 13px; font-weight: 700; color: var(--muted);
+    cursor: pointer; transition: all 0.15s;
+  }
+  .btn-end:hover { border-color: var(--p1); color: var(--p1d); }
+
+  /* ===== PANTALLA RESULTADO ===== */
+  #s-resultado {
+    background: linear-gradient(160deg, #FFD93D 0%, #FF6B6B 60%, #4ECDC4 100%);
+    justify-content: center; gap: 20px;
+  }
+
+  .trophy { font-size: 80px; text-align: center; animation: bounce 0.6s ease infinite alternate; }
+  @keyframes bounce { from{transform:translateY(0)} to{transform:translateY(-12px)} }
+
+  .result-title {
+    font-family: 'Fredoka One', cursive; font-size: 34px; color: white;
+    text-shadow: 2px 2px 0 rgba(0,0,0,0.15); text-align: center;
+  }
+
+  .result-card {
+    background: white; border-radius: var(--radius); padding: 24px;
+    width: 100%; max-width: 360px; box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+  }
+  .result-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 0; border-bottom: 2px solid #F0EDE8;
+  }
+  .result-row:last-child { border: none; }
+  .result-name { font-size: 18px; font-weight: 800; }
+  .result-name.p1 { color: var(--p1d); }
+  .result-name.p2 { color: var(--p2d); }
+  .result-score { font-family: 'Fredoka One', cursive; font-size: 32px; }
+  .result-score.p1 { color: var(--p1); }
+  .result-score.p2 { color: var(--p2); }
+  .winner-badge {
+    background: var(--gold); color: white; border-radius: 10px;
+    font-size: 12px; font-weight: 800; padding: 3px 10px;
+  }
+
+  .btn-replay {
+    width: 100%; max-width: 360px; padding: 16px; border: none; border-radius: 16px;
+    background: white; color: var(--purple);
+    font-family: 'Fredoka One', cursive; font-size: 22px;
+    cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.12);
+    transition: transform 0.15s;
+  }
+  .btn-replay:active { transform: scale(0.97); }
+
+  /* ===== CONFETI ===== */
+  .confetti-piece {
+    position: fixed; width: 10px; height: 10px; top: -20px;
+    border-radius: 2px; animation: fall linear forwards;
+    pointer-events: none; z-index: 300;
+  }
+  @keyframes fall {
+    to { transform: translateY(110vh) rotate(720deg); opacity: 0; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== PANTALLA INICIO ===== -->
+<div id="s-inicio" class="screen active">
+  <div class="logo-wrap">
+    <svg class="clock-logo" width="100" height="100" viewBox="0 0 100 100">
+      <circle cx="50" cy="50" r="46" fill="white" opacity="0.95"/>
+      <circle cx="50" cy="50" r="46" fill="none" stroke="rgba(255,255,255,0.6)" stroke-width="3"/>
+      <!-- Texto DAVID -->
+      <text x="50" y="30" text-anchor="middle" font-family="'Fredoka One',cursive" font-size="10" fill="#9B59B6">DAVID</text>
+      <!-- Marcas de hora -->
+      <g stroke="#9B59B6" stroke-width="2.5" stroke-linecap="round">
+        <line x1="50" y1="8" x2="50" y2="14"/>
+        <line x1="50" y1="86" x2="50" y2="92"/>
+        <line x1="8" y1="50" x2="14" y2="50"/>
+        <line x1="86" y1="50" x2="92" y2="50"/>
+      </g>
+      <!-- Agujas decorativas -->
+      <line x1="50" y1="50" x2="50" y2="22" stroke="#FF6B6B" stroke-width="3.5" stroke-linecap="round"/>
+      <line x1="50" y1="50" x2="72" y2="50" stroke="#4ECDC4" stroke-width="2.5" stroke-linecap="round"/>
+      <circle cx="50" cy="50" r="4" fill="#9B59B6"/>
+    </svg>
+    <div class="logo-brand">DAVID</div>
+    <div class="logo-sub">⏰ Aprende las horas ⏰</div>
+  </div>
+
+  <div class="card-inicio">
+    <h2>¿Cuántos jugadores? 🎮</h2>
+    <div class="players-row">
+      <button class="player-btn selected" onclick="selectPlayers(1)" id="pb1">
+        👤 <span class="pb-label">1 Jugador</span>
+      </button>
+      <button class="player-btn" onclick="selectPlayers(2)" id="pb2">
+        👥 <span class="pb-label">2 Jugadores</span>
+      </button>
+    </div>
+
+    <div class="input-group">
+      <label>Nombre del Jugador 1 🔴</label>
+      <input type="text" id="name1" placeholder="Tu nombre..." value="David">
+    </div>
+    <div class="input-group" id="p2group" style="display:none">
+      <label>Nombre del Jugador 2 🟢</label>
+      <input type="text" id="name2" placeholder="Tu nombre..." value="Amig@">
+    </div>
+
+    <button class="btn-start" onclick="startGame()">¡JUGAR! 🚀</button>
+  </div>
+</div>
+
+<!-- ===== PANTALLA JUEGO ===== -->
+<div id="s-juego" class="screen">
+  <div class="game-header">
+    <div>
+      <div id="turn-badge" class="turn-badge p1">👤 Turno</div>
+      <div class="round-info" id="round-info">Ronda 1</div>
+    </div>
+    <div class="scores-row">
+      <div class="score-chip p1" id="score-p1">🔴 0</div>
+      <div class="score-chip p2" id="score-p2" style="display:none">🟢 0</div>
+    </div>
+    <button class="btn-end" onclick="showEndConfirm()">Finalizar 🏁</button>
+  </div>
+
+  <div class="game-body">
+    <div class="clock-area">
+      <div class="clock-type-label" id="clock-label">Reloj analógico</div>
+      <!-- Reloj analógico -->
+      <div id="analog-wrap" class="analog-clock">
+        <svg id="clock-svg" width="220" height="220" viewBox="0 0 220 220">
+          <!-- Sombra -->
+          <circle cx="112" cy="112" r="98" fill="rgba(0,0,0,0.06)"/>
+          <!-- Fondo -->
+          <circle cx="110" cy="110" r="98" fill="white"/>
+          <circle cx="110" cy="110" r="98" fill="none" stroke="#E8E4F0" stroke-width="3"/>
+          <!-- Borde decorativo -->
+          <circle cx="110" cy="110" r="90" fill="none" stroke="#C5B8E8" stroke-width="2"/>
+          <!-- Marca DAVID -->
+          <text x="110" y="68" text-anchor="middle" font-family="'Fredoka One',cursive" font-size="11" fill="#9B59B6">DAVID</text>
+          <!-- Números -->
+          <g font-family="'Fredoka One',cursive" font-size="16" text-anchor="middle" dominant-baseline="central">
+            <text x="110" y="26" fill="#FF6B6B">12</text>
+            <text x="189" y="110" fill="#FF6B6B">3</text>
+            <text x="110" y="194" fill="#FF6B6B">6</text>
+            <text x="31" y="110" fill="#FF6B6B">9</text>
+            <text x="155" y="39" fill="#C5B8E8" font-size="12">1</text>
+            <text x="184" y="68" fill="#C5B8E8" font-size="12">2</text>
+            <text x="184" y="152" fill="#C5B8E8" font-size="12">4</text>
+            <text x="155" y="181" fill="#C5B8E8" font-size="12">5</text>
+            <text x="65" y="181" fill="#C5B8E8" font-size="12">7</text>
+            <text x="36" y="152" fill="#C5B8E8" font-size="12">8</text>
+            <text x="36" y="68" fill="#C5B8E8" font-size="12">10</text>
+            <text x="65" y="39" fill="#C5B8E8" font-size="12">11</text>
+          </g>
+          <!-- Marcas de minuto -->
+          <g id="tick-marks"></g>
+          <!-- Aguja de horas (se posiciona por JS) -->
+          <line id="hour-hand" x1="110" y1="110" x2="110" y2="65"
+            stroke="#9B59B6" stroke-width="7" stroke-linecap="round"/>
+          <!-- Aguja de minutos (se posiciona por JS) -->
+          <line id="min-hand" x1="110" y1="110" x2="110" y2="30"
+            stroke="#FF6B6B" stroke-width="4.5" stroke-linecap="round"/>
+          <!-- Cola pequeña de aguja de horas -->
+          <line id="hour-tail" x1="110" y1="110" x2="110" y2="120"
+            stroke="#9B59B6" stroke-width="7" stroke-linecap="round"/>
+          <!-- Cola pequeña de aguja de minutos -->
+          <line id="min-tail" x1="110" y1="110" x2="110" y2="122"
+            stroke="#FF6B6B" stroke-width="4.5" stroke-linecap="round"/>
+          <!-- Centro -->
+          <circle cx="110" cy="110" r="7" fill="#9B59B6"/>
+          <circle cx="110" cy="110" r="3" fill="white"/>
+        </svg>
+      </div>
+      <!-- Reloj digital -->
+      <div id="digital-wrap" class="digital-display" style="display:none">
+        <div class="digital-time" id="digital-time">
+          <span id="dt-h">12</span><span class="digital-colon">:</span><span id="dt-m">00</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="options-area" id="options-area"></div>
+  </div>
+</div>
+
+<!-- ===== PANTALLA RESULTADO ===== -->
+<div id="s-resultado" class="screen">
+  <div class="trophy" id="trophy">🏆</div>
+  <div class="result-title" id="result-title">¡Genial!</div>
+  <div class="result-card" id="result-card"></div>
+  <button class="btn-replay" onclick="goHome()">🔄 Jugar de nuevo</button>
+</div>
+
+<!-- ===== OVERLAY FEEDBACK ===== -->
+<div class="feedback-overlay" id="feedback-overlay">
+  <div class="feedback-box">
+    <div class="feedback-emoji" id="fb-emoji">🎉</div>
+    <div class="feedback-title" id="fb-title">¡Correcto!</div>
+    <div class="feedback-msg" id="fb-msg">Muy bien</div>
+    <button class="feedback-next" id="fb-next" onclick="nextQuestion()">Siguiente ➡️</button>
+  </div>
+</div>
+
+<!-- ===== OVERLAY TURNO ===== -->
+<div class="handoff-overlay" id="handoff-overlay">
+  <div class="handoff-box">
+    <div style="font-size:60px; margin-bottom:12px" id="ho-emoji">👤</div>
+    <h2 id="ho-name">¡Turno de David!</h2>
+    <p id="ho-msg">¡Prepárate para responder! 😊</p>
+    <button class="handoff-tap" onclick="dismissHandoff()">¡LISTO! 👍</button>
+  </div>
+</div>
+
+<script>
+const TIME_EXPRESSIONS = [
+  { h:12, m:0,  label:"Las doce en punto",       emojis:"🕛" },
+  { h:1,  m:0,  label:"La una en punto",          emojis:"🕐" },
+  { h:2,  m:0,  label:"Las dos en punto",         emojis:"🕑" },
+  { h:3,  m:0,  label:"Las tres en punto",        emojis:"🕒" },
+  { h:4,  m:0,  label:"Las cuatro en punto",      emojis:"🕓" },
+  { h:5,  m:0,  label:"Las cinco en punto",       emojis:"🕔" },
+  { h:6,  m:0,  label:"Las seis en punto",        emojis:"🕕" },
+  { h:7,  m:0,  label:"Las siete en punto",       emojis:"🕖" },
+  { h:8,  m:0,  label:"Las ocho en punto",        emojis:"🕗" },
+  { h:9,  m:0,  label:"Las nueve en punto",       emojis:"🕘" },
+  { h:10, m:0,  label:"Las diez en punto",        emojis:"🕙" },
+  { h:11, m:0,  label:"Las once en punto",        emojis:"🕚" },
+  { h:1,  m:15, label:"La una y cuarto",          emojis:"⏰" },
+  { h:2,  m:15, label:"Las dos y cuarto",         emojis:"⏰" },
+  { h:3,  m:15, label:"Las tres y cuarto",        emojis:"⏰" },
+  { h:4,  m:15, label:"Las cuatro y cuarto",      emojis:"⏰" },
+  { h:5,  m:15, label:"Las cinco y cuarto",       emojis:"⏰" },
+  { h:6,  m:15, label:"Las seis y cuarto",        emojis:"⏰" },
+  { h:7,  m:15, label:"Las siete y cuarto",       emojis:"⏰" },
+  { h:8,  m:15, label:"Las ocho y cuarto",        emojis:"⏰" },
+  { h:9,  m:15, label:"Las nueve y cuarto",       emojis:"⏰" },
+  { h:10, m:15, label:"Las diez y cuarto",        emojis:"⏰" },
+  { h:11, m:15, label:"Las once y cuarto",        emojis:"⏰" },
+  { h:12, m:15, label:"Las doce y cuarto",        emojis:"⏰" },
+  { h:1,  m:30, label:"La una y media",           emojis:"🕧" },
+  { h:2,  m:30, label:"Las dos y media",          emojis:"🕧" },
+  { h:3,  m:30, label:"Las tres y media",         emojis:"🕧" },
+  { h:4,  m:30, label:"Las cuatro y media",       emojis:"🕧" },
+  { h:5,  m:30, label:"Las cinco y media",        emojis:"🕧" },
+  { h:6,  m:30, label:"Las seis y media",         emojis:"🕧" },
+  { h:7,  m:30, label:"Las siete y media",        emojis:"🕧" },
+  { h:8,  m:30, label:"Las ocho y media",         emojis:"🕧" },
+  { h:9,  m:30, label:"Las nueve y media",        emojis:"🕧" },
+  { h:10, m:30, label:"Las diez y media",         emojis:"🕧" },
+  { h:11, m:30, label:"Las once y media",         emojis:"🕧" },
+  { h:12, m:30, label:"Las doce y media",         emojis:"🕧" },
+  { h:1,  m:45, label:"Las dos menos cuarto",     emojis:"⏳" },
+  { h:2,  m:45, label:"Las tres menos cuarto",    emojis:"⏳" },
+  { h:3,  m:45, label:"Las cuatro menos cuarto",  emojis:"⏳" },
+  { h:4,  m:45, label:"Las cinco menos cuarto",   emojis:"⏳" },
+  { h:5,  m:45, label:"Las seis menos cuarto",    emojis:"⏳" },
+  { h:6,  m:45, label:"Las siete menos cuarto",   emojis:"⏳" },
+  { h:7,  m:45, label:"Las ocho menos cuarto",    emojis:"⏳" },
+  { h:8,  m:45, label:"Las nueve menos cuarto",   emojis:"⏳" },
+  { h:9,  m:45, label:"Las diez menos cuarto",    emojis:"⏳" },
+  { h:10, m:45, label:"Las once menos cuarto",    emojis:"⏳" },
+  { h:11, m:45, label:"Las doce menos cuarto",    emojis:"⏳" },
+  { h:12, m:45, label:"La una menos cuarto",      emojis:"⏳" },
+  { h:1,  m:20, label:"La una y veinte",              emojis:"🕐" },
+  { h:2,  m:20, label:"Las dos y veinte",             emojis:"🕑" },
+  { h:3,  m:20, label:"Las tres y veinte",            emojis:"🕒" },
+  { h:4,  m:20, label:"Las cuatro y veinte",          emojis:"🕓" },
+  { h:5,  m:20, label:"Las cinco y veinte",           emojis:"🕔" },
+  { h:6,  m:20, label:"Las seis y veinte",            emojis:"🕕" },
+  { h:7,  m:20, label:"Las siete y veinte",           emojis:"🕖" },
+  { h:8,  m:20, label:"Las ocho y veinte",            emojis:"🕗" },
+  { h:9,  m:20, label:"Las nueve y veinte",           emojis:"🕘" },
+  { h:10, m:20, label:"Las diez y veinte",            emojis:"🕙" },
+  { h:11, m:20, label:"Las once y veinte",            emojis:"🕚" },
+  { h:12, m:20, label:"Las doce y veinte",            emojis:"🕛" },
+  { h:1,  m:40, label:"Las dos menos veinte",         emojis:"🕐" },
+  { h:2,  m:40, label:"Las tres menos veinte",        emojis:"🕑" },
+  { h:3,  m:40, label:"Las cuatro menos veinte",      emojis:"🕒" },
+  { h:4,  m:40, label:"Las cinco menos veinte",       emojis:"🕓" },
+  { h:5,  m:40, label:"Las seis menos veinte",        emojis:"🕔" },
+  { h:6,  m:40, label:"Las siete menos veinte",       emojis:"🕕" },
+  { h:7,  m:40, label:"Las ocho menos veinte",        emojis:"🕖" },
+  { h:8,  m:40, label:"Las nueve menos veinte",       emojis:"🕗" },
+  { h:9,  m:40, label:"Las diez menos veinte",        emojis:"🕘" },
+  { h:10, m:40, label:"Las once menos veinte",        emojis:"🕙" },
+  { h:11, m:40, label:"Las doce menos veinte",        emojis:"🕚" },
+  { h:12, m:40, label:"La una menos veinte",          emojis:"🕛" },
+  { h:1,  m:5,  label:"La una y cinco",               emojis:"🕐" },
+  { h:2,  m:5,  label:"Las dos y cinco",              emojis:"🕑" },
+  { h:3,  m:5,  label:"Las tres y cinco",             emojis:"🕒" },
+  { h:4,  m:5,  label:"Las cuatro y cinco",           emojis:"🕓" },
+  { h:5,  m:5,  label:"Las cinco y cinco",            emojis:"🕔" },
+  { h:6,  m:5,  label:"Las seis y cinco",             emojis:"🕕" },
+  { h:7,  m:5,  label:"Las siete y cinco",            emojis:"🕖" },
+  { h:8,  m:5,  label:"Las ocho y cinco",             emojis:"🕗" },
+  { h:9,  m:5,  label:"Las nueve y cinco",            emojis:"🕘" },
+  { h:10, m:5,  label:"Las diez y cinco",             emojis:"🕙" },
+  { h:11, m:5,  label:"Las once y cinco",             emojis:"🕚" },
+  { h:12, m:5,  label:"Las doce y cinco",             emojis:"🕛" },
+  { h:1,  m:55, label:"Las dos menos cinco",          emojis:"🕐" },
+  { h:2,  m:55, label:"Las tres menos cinco",         emojis:"🕑" },
+  { h:3,  m:55, label:"Las cuatro menos cinco",       emojis:"🕒" },
+  { h:4,  m:55, label:"Las cinco menos cinco",        emojis:"🕓" },
+  { h:5,  m:55, label:"Las seis menos cinco",         emojis:"🕔" },
+  { h:6,  m:55, label:"Las siete menos cinco",        emojis:"🕕" },
+  { h:7,  m:55, label:"Las ocho menos cinco",         emojis:"🕖" },
+  { h:8,  m:55, label:"Las nueve menos cinco",        emojis:"🕗" },
+  { h:9,  m:55, label:"Las diez menos cinco",         emojis:"🕘" },
+  { h:10, m:55, label:"Las once menos cinco",         emojis:"🕙" },
+  { h:11, m:55, label:"Las doce menos cinco",         emojis:"🕚" },
+  { h:12, m:55, label:"La una menos cinco",           emojis:"🕛" },
+  { h:1,  m:10, label:"La una y diez",                emojis:"🕐" },
+  { h:2,  m:10, label:"Las dos y diez",               emojis:"🕑" },
+  { h:3,  m:10, label:"Las tres y diez",              emojis:"🕒" },
+  { h:4,  m:10, label:"Las cuatro y diez",            emojis:"🕓" },
+  { h:5,  m:10, label:"Las cinco y diez",             emojis:"🕔" },
+  { h:6,  m:10, label:"Las seis y diez",              emojis:"🕕" },
+  { h:7,  m:10, label:"Las siete y diez",             emojis:"🕖" },
+  { h:8,  m:10, label:"Las ocho y diez",              emojis:"🕗" },
+  { h:9,  m:10, label:"Las nueve y diez",             emojis:"🕘" },
+  { h:10, m:10, label:"Las diez y diez",              emojis:"🕙" },
+  { h:11, m:10, label:"Las once y diez",              emojis:"🕚" },
+  { h:12, m:10, label:"Las doce y diez",              emojis:"🕛" },
+  { h:1,  m:50, label:"Las dos menos diez",           emojis:"🕐" },
+  { h:2,  m:50, label:"Las tres menos diez",          emojis:"🕑" },
+  { h:3,  m:50, label:"Las cuatro menos diez",        emojis:"🕒" },
+  { h:4,  m:50, label:"Las cinco menos diez",         emojis:"🕓" },
+  { h:5,  m:50, label:"Las seis menos diez",          emojis:"🕔" },
+  { h:6,  m:50, label:"Las siete menos diez",         emojis:"🕕" },
+  { h:7,  m:50, label:"Las ocho menos diez",          emojis:"🕖" },
+  { h:8,  m:50, label:"Las nueve menos diez",         emojis:"🕗" },
+  { h:9,  m:50, label:"Las diez menos diez",          emojis:"🕘" },
+  { h:10, m:50, label:"Las once menos diez",          emojis:"🕙" },
+  { h:11, m:50, label:"Las doce menos diez",          emojis:"🕚" },
+  { h:12, m:50, label:"La una menos diez",            emojis:"🕛" },
+  { h:1,  m:35, label:"La una y veinticinco",         emojis:"🕐" },
+  { h:2,  m:35, label:"Las dos y veinticinco",        emojis:"🕑" },
+  { h:3,  m:35, label:"Las tres y veinticinco",       emojis:"🕒" },
+  { h:4,  m:35, label:"Las cuatro y veinticinco",     emojis:"🕓" },
+  { h:5,  m:35, label:"Las cinco y veinticinco",      emojis:"🕔" },
+  { h:6,  m:35, label:"Las seis y veinticinco",       emojis:"🕕" },
+  { h:7,  m:35, label:"Las siete y veinticinco",      emojis:"🕖" },
+  { h:8,  m:35, label:"Las ocho y veinticinco",       emojis:"🕗" },
+  { h:9,  m:35, label:"Las nueve y veinticinco",      emojis:"🕘" },
+  { h:10, m:35, label:"Las diez y veinticinco",       emojis:"🕙" },
+  { h:11, m:35, label:"Las once y veinticinco",       emojis:"🕚" },
+  { h:12, m:35, label:"Las doce y veinticinco",       emojis:"🕛" },
+  { h:1,  m:25, label:"Las dos menos veinticinco",    emojis:"🕐" },
+  { h:2,  m:25, label:"Las tres menos veinticinco",   emojis:"🕑" },
+  { h:3,  m:25, label:"Las cuatro menos veinticinco", emojis:"🕒" },
+  { h:4,  m:25, label:"Las cinco menos veinticinco",  emojis:"🕓" },
+  { h:5,  m:25, label:"Las seis menos veinticinco",   emojis:"🕔" },
+  { h:6,  m:25, label:"Las siete menos veinticinco",  emojis:"🕕" },
+  { h:7,  m:25, label:"Las ocho menos veinticinco",   emojis:"🕖" },
+  { h:8,  m:25, label:"Las nueve menos veinticinco",  emojis:"🕗" },
+  { h:9,  m:25, label:"Las diez menos veinticinco",   emojis:"🕘" },
+  { h:10, m:25, label:"Las once menos veinticinco",   emojis:"🕙" },
+  { h:11, m:25, label:"Las doce menos veinticinco",   emojis:"🕚" },
+  { h:12, m:25, label:"La una menos veinticinco",     emojis:"🕛" },
+];
+
+const FUN_CORRECT = ["¡Genial! 🎉","¡Súper! ⭐","¡Perfecto! 🌟","¡Increíble! 🚀","¡Bravo! 🦁","¡Qué listo! 🧠"];
+const FUN_WRONG = ["¡Casi! 😅","¡Inténtalo! 💪","¡Falta poco! 🎯","¡Sigue intentando! 🔥"];
+
+let numPlayers = 1;
+let names = ["David","Amig@"];
+let scores = [0,0];
+let currentPlayer = 0;
+let round = 1;
+let clockType = "analog";
+let currentQ = null;
+let answeredCurrent = false;
+let playersAnsweredThisRound = 0;
+
+function selectPlayers(n) {
+  numPlayers = n;
+  document.getElementById('pb1').classList.toggle('selected', n===1);
+  document.getElementById('pb2').classList.toggle('selected', n===2);
+  document.getElementById('p2group').style.display = n===2 ? 'block' : 'none';
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function startGame() {
+  names[0] = document.getElementById('name1').value.trim() || "Jugador 1";
+  names[1] = document.getElementById('name2').value.trim() || "Jugador 2";
+  scores = [0,0]; currentPlayer = 0; round = 1; clockType = "analog"; playersAnsweredThisRound = 0;
+  updateScoreUI();
+  buildTickMarks();
+  showScreen('s-juego');
+  if(numPlayers===2) {
+    showHandoff(0);
+  } else {
+    loadQuestion();
+  }
+}
+
+function buildTickMarks() {
+  const g = document.getElementById('tick-marks');
+  g.innerHTML='';
+  for(let i=0;i<60;i++){
+    const angle = i*6;
+    const isMajor = i%5===0;
+    const len = isMajor ? 10 : 5;
+    const r1 = 88; const r2 = r1 - len;
+    const a = (angle-90)*Math.PI/180;
+    const x1 = 110 + r1*Math.cos(a);
+    const y1 = 110 + r1*Math.sin(a);
+    const x2 = 110 + r2*Math.cos(a);
+    const y2 = 110 + r2*Math.sin(a);
+    const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+    line.setAttribute('x1',x1.toFixed(1));line.setAttribute('y1',y1.toFixed(1));
+    line.setAttribute('x2',x2.toFixed(1));line.setAttribute('y2',y2.toFixed(1));
+    line.setAttribute('stroke', isMajor ? '#9B59B6' : '#D5CAEE');
+    line.setAttribute('stroke-width', isMajor ? '2' : '1');
+    g.appendChild(line);
+  }
+}
+
+function updateScoreUI() {
+  document.getElementById('score-p1').textContent = `🔴 ${scores[0]}`;
+  const s2 = document.getElementById('score-p2');
+  if(numPlayers===2) {
+    s2.style.display='flex';
+    s2.textContent = `🟢 ${scores[1]}`;
+  } else {
+    s2.style.display='none';
+  }
+}
+
+function loadQuestion() {
+  answeredCurrent = false;
+  const p = currentPlayer;
+  const badge = document.getElementById('turn-badge');
+  badge.textContent = `${p===0?'🔴':'🟢'} ${names[p]}`;
+  badge.className = `turn-badge ${p===0?'p1':'p2'}`;
+  document.getElementById('round-info').textContent = `Ronda ${round}`;
+
+  // Alternar tipo de reloj
+  const isAnalog = clockType === 'analog';
+  document.getElementById('analog-wrap').style.display = isAnalog ? 'block' : 'none';
+  document.getElementById('digital-wrap').style.display = isAnalog ? 'none' : 'flex';
+  document.getElementById('clock-label').textContent = isAnalog ? '🕰️ Reloj analógico' : '💡 Reloj digital';
+
+  // Elegir pregunta con doble peso para las "menos"
+  const WEIGHTED_POOL = TIME_EXPRESSIONS.flatMap(t =>
+    t.label.includes('menos') ? [t, t] : [t]
+  );
+  currentQ = WEIGHTED_POOL[Math.floor(Math.random()*WEIGHTED_POOL.length)];
+
+  if(isAnalog) setAnalogClock(currentQ.h, currentQ.m);
+  else setDigitalClock(currentQ.h, currentQ.m);
+
+  buildOptions();
+}
+
+function setAnalogClock(h, m) {
+  const cx = 110, cy = 110;
+  const hourDeg = ((h % 12) * 30 + m * 0.5 - 90) * Math.PI / 180;
+  const minDeg  = (m * 6 - 90) * Math.PI / 180;
+  const hLen = 45, hTail = 10, mLen = 78, mTail = 12;
+  const hx2 = cx + hLen  * Math.cos(hourDeg);
+  const hy2 = cy + hLen  * Math.sin(hourDeg);
+  const htx = cx - hTail * Math.cos(hourDeg);
+  const hty = cy - hTail * Math.sin(hourDeg);
+  const mx2 = cx + mLen  * Math.cos(minDeg);
+  const my2 = cy + mLen  * Math.sin(minDeg);
+  const mtx = cx - mTail * Math.cos(minDeg);
+  const mty = cy - mTail * Math.sin(minDeg);
+  const hh = document.getElementById('hour-hand');
+  hh.setAttribute('x1',cx); hh.setAttribute('y1',cy);
+  hh.setAttribute('x2',hx2.toFixed(2)); hh.setAttribute('y2',hy2.toFixed(2));
+  const ht = document.getElementById('hour-tail');
+  ht.setAttribute('x1',cx); ht.setAttribute('y1',cy);
+  ht.setAttribute('x2',htx.toFixed(2)); ht.setAttribute('y2',hty.toFixed(2));
+  const mh = document.getElementById('min-hand');
+  mh.setAttribute('x1',cx); mh.setAttribute('y1',cy);
+  mh.setAttribute('x2',mx2.toFixed(2)); mh.setAttribute('y2',my2.toFixed(2));
+  const mt = document.getElementById('min-tail');
+  mt.setAttribute('x1',cx); mt.setAttribute('y1',cy);
+  mt.setAttribute('x2',mtx.toFixed(2)); mt.setAttribute('y2',mty.toFixed(2));
+}
+
+function setDigitalClock(h, m) {
+  document.getElementById('dt-h').textContent = String(h).padStart(2,'0');
+  document.getElementById('dt-m').textContent = String(m).padStart(2,'0');
+}
+
+function buildOptions() {
+  const correct = currentQ;
+  // Elegir 3 distractores distintos
+  let pool = TIME_EXPRESSIONS.filter(t => t.label !== correct.label);
+  pool = shuffle(pool).slice(0,3);
+  let opts = shuffle([correct, ...pool]);
+
+  const area = document.getElementById('options-area');
+  area.innerHTML='';
+  const icons = ['🅰️','🅱️','🅲','🅳'];
+  opts.forEach((opt,i) => {
+    const btn = document.createElement('button');
+    btn.className='option-btn';
+    btn.innerHTML=`<span class="opt-icon">${icons[i]}</span>${opt.label}`;
+    btn.onclick = () => answer(btn, opt.label === correct.label, correct.label);
+    area.appendChild(btn);
+  });
+}
+
+function answer(btn, isCorrect, correctLabel) {
+  if(answeredCurrent) return;
+  answeredCurrent = true;
+  document.querySelectorAll('.option-btn').forEach(b=>{
+    b.disabled=true;
+    if(b.textContent.includes(correctLabel)) b.classList.add('correct');
+  });
+
+  const overlay = document.getElementById('feedback-overlay');
+  const nextBtn = document.getElementById('fb-next');
+  if(isCorrect) {
+    scores[currentPlayer]++;
+    updateScoreUI();
+    btn.classList.add('correct');
+    document.getElementById('fb-emoji').textContent='🎉';
+    document.getElementById('fb-title').textContent = FUN_CORRECT[Math.floor(Math.random()*FUN_CORRECT.length)];
+    document.getElementById('fb-msg').textContent = `La respuesta era: ${correctLabel}`;
+    nextBtn.className='feedback-next ok';
+    nextBtn.textContent='¡Siguiente! ➡️';
+  } else {
+    btn.classList.add('wrong');
+    document.getElementById('fb-emoji').textContent='😅';
+    document.getElementById('fb-title').textContent = FUN_WRONG[Math.floor(Math.random()*FUN_WRONG.length)];
+    document.getElementById('fb-msg').textContent = `Era: ${correctLabel}`;
+    nextBtn.className='feedback-next fail';
+    nextBtn.textContent='Continuar 💪';
+  }
+  overlay.classList.add('show');
+}
+
+function nextQuestion() {
+  document.getElementById('feedback-overlay').classList.remove('show');
+  playersAnsweredThisRound++;
+
+  if(numPlayers===2) {
+    if(playersAnsweredThisRound < 2) {
+      // Turno del segundo jugador, mismo tipo de reloj
+      currentPlayer = 1 - currentPlayer;
+      showHandoff(currentPlayer);
+    } else {
+      // Los dos jugadores ya respondieron -> nueva ronda, cambiar reloj
+      playersAnsweredThisRound = 0;
+      round++;
+      clockType = clockType === 'analog' ? 'digital' : 'analog';
+      currentPlayer = 0;
+      showHandoff(0);
+    }
+  } else {
+    round++;
+    clockType = clockType === 'analog' ? 'digital' : 'analog';
+    loadQuestion();
+  }
+}
+
+function showHandoff(p) {
+  const ho = document.getElementById('handoff-overlay');
+  const emoji = p===0?'🔴':'🟢';
+  document.getElementById('ho-emoji').textContent = emoji;
+  document.getElementById('ho-name').textContent = `¡Turno de ${names[p]}!`;
+  document.getElementById('ho-msg').textContent = `${names[p]}, prepárate para responder 😊`;
+  ho.className = `handoff-overlay show ${p===0?'p1bg':'p2bg'}`;
+}
+
+function dismissHandoff() {
+  document.getElementById('handoff-overlay').classList.remove('show');
+  loadQuestion();
+}
+
+function showEndConfirm() {
+  if(confirm('¿Seguro que quieres finalizar la partida?')) showResult();
+}
+
+function showResult() {
+  showScreen('s-resultado');
+  const s0=scores[0], s1=scores[1];
+  let title='', trophy='🏆';
+  if(numPlayers===1) {
+    title = s0>=5 ? `¡${names[0]} es un campeón!` : `¡Bien jugado, ${names[0]}!`;
+  } else {
+    if(s0>s1) title=`¡${names[0]} gana! 🎊`;
+    else if(s1>s0) title=`¡${names[1]} gana! 🎊`;
+    else { title='¡Empate! ¡Los dos son geniales!'; trophy='🤝'; }
+  }
+  document.getElementById('result-title').textContent=title;
+  document.getElementById('trophy').textContent=trophy;
+
+  let html='';
+  html+=`<div class="result-row">
+    <span class="result-name p1">🔴 ${names[0]}</span>
+    ${s0>s1?'<span class="winner-badge">⭐ Ganador</span>':''}
+    <span class="result-score p1">${s0} pts</span>
+  </div>`;
+  if(numPlayers===2) {
+    html+=`<div class="result-row">
+      <span class="result-name p2">🟢 ${names[1]}</span>
+      ${s1>s0?'<span class="winner-badge">⭐ Ganador</span>':''}
+      <span class="result-score p2">${s1} pts</span>
+    </div>`;
+  }
+  document.getElementById('result-card').innerHTML=html;
+  launchConfetti();
+}
+
+function goHome() {
+  showScreen('s-inicio');
+}
+
+function shuffle(arr) {
+  const a=[...arr];
+  for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
+  return a;
+}
+
+function launchConfetti() {
+  const colors=['#FF6B6B','#FFD93D','#4ECDC4','#9B59B6','#2ECC71','#F5A623'];
+  for(let i=0;i<60;i++){
+    const el=document.createElement('div');
+    el.className='confetti-piece';
+    el.style.cssText=`
+      left:${Math.random()*100}vw;
+      background:${colors[Math.floor(Math.random()*colors.length)]};
+      width:${6+Math.random()*8}px; height:${6+Math.random()*8}px;
+      border-radius:${Math.random()>0.5?'50%':'2px'};
+      animation-duration:${1.5+Math.random()*2}s;
+      animation-delay:${Math.random()*0.8}s;
+    `;
+    document.body.appendChild(el);
+    setTimeout(()=>el.remove(), 4000);
+  }
+}
+
+buildTickMarks();
+</script>
+</body>
+</html>
