@@ -700,12 +700,38 @@ function setDigitalClock(h, m) {
   document.getElementById('dt-m').textContent = String(m).padStart(2,'0');
 }
 
+function getMinuteType(m) {
+  if (m === 0)  return 'punto';
+  if (m === 15) return 'cuarto_mas';
+  if (m === 30) return 'media';
+  if (m === 45) return 'cuarto_menos';
+  if (m < 30)   return 'mas';
+  return 'menos';
+}
+
 function buildOptions() {
   const correct = currentQ;
-  // Elegir 3 distractores distintos
-  let pool = TIME_EXPRESSIONS.filter(t => t.label !== correct.label);
-  pool = shuffle(pool).slice(0,3);
-  let opts = shuffle([correct, ...pool]);
+  const correctType = getMinuteType(correct.m);
+
+  // Distractores: mismo tipo de nomenclatura, distinta hora y distinto minuto
+  let sameType = TIME_EXPRESSIONS.filter(t =>
+    t.label !== correct.label &&
+    t.h !== correct.h &&
+    getMinuteType(t.m) === correctType
+  );
+
+  // Si no hay suficientes del mismo tipo, ampliar con cualquier tipo pero diferente hora/minuto
+  if (sameType.length < 3) {
+    const extra = TIME_EXPRESSIONS.filter(t =>
+      t.label !== correct.label &&
+      t.h !== correct.h &&
+      !sameType.includes(t)
+    );
+    sameType = [...sameType, ...shuffle(extra)].slice(0, 3);
+  }
+
+  const distractors = shuffle(sameType).slice(0, 3);
+  const opts = shuffle([correct, ...distractors]);
 
   const area = document.getElementById('options-area');
   area.innerHTML='';
